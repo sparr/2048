@@ -3,8 +3,10 @@
 
 $field-width: 500px;
 $grid-spacing: 15px;
+$grid-rows: 4;
 $grid-row-cells: 4;
 $tile-size: ($field-width - $grid-spacing * ($grid-row-cells + 1)) / $grid-row-cells;
+$field-height: ($field-width - $grid-spacing) / $grid-row-cells * $grid-rows + $grid-spacing;
 $tile-border-radius: 3px;
 
 $mobile-threshold: $field-width + 20px;
@@ -188,7 +190,7 @@ hr {
     background: $game-container-background;
     border-radius: $tile-border-radius * 2;
     width: $field-width;
-    height: $field-width;
+    height: $field-height;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
@@ -296,9 +298,9 @@ hr {
     }
 
     // Build position classes
-    @for $x from 1 through $grid-row-cells {
-      @for $y from 1 through $grid-row-cells {
-        &.tile-position-#{$x}-#{$y} {
+    @for $y from 1 through $grid-rows {
+      @for $x from 1 through $grid-row-cells {
+        &.tile-position-#{$y}-#{$x} {
           $xPos: floor(($tile-size + $grid-spacing) * ($x - 1));
           $yPos: floor(($tile-size + $grid-spacing) * ($y - 1));
           @include transform(translate($xPos, $yPos));
@@ -476,8 +478,8 @@ hr {
   // Redefine variables for smaller screens
   $field-width: 280px;
   $grid-spacing: 10px;
-  $grid-row-cells: 4;
   $tile-size: ($field-width - $grid-spacing * ($grid-row-cells + 1)) / $grid-row-cells;
+  $field-height: ($field-width - $grid-spacing) / $grid-row-cells * $grid-rows + $grid-spacing;
   $tile-border-radius: 3px;
   $game-container-margin-top: 17px;
 

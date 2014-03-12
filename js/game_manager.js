@@ -1,5 +1,6 @@
-function GameManager(size, InputManager, Actuator, StorageManager) {
-  this.size           = size; // Size of the grid
+function GameManager(sizeX, sizeY, InputManager, Actuator, StorageManager) {
+  this.sizeX          = sizeX; // Width of the grid
+  this.sizeY          = sizeY; // Height of the grid
   this.inputManager   = new InputManager;
   this.storageManager = new StorageManager;
   this.actuator       = new Actuator;
@@ -35,16 +36,24 @@ GameManager.prototype.isGameTerminated = function () {
 GameManager.prototype.setup = function () {
   var previousState = this.storageManager.getGameState();
 
+  // A saved game of different dimensions cannot be rendered on this grid
+  if (previousState && (previousState.grid.sizeX !== this.sizeX ||
+                        previousState.grid.sizeY !== this.sizeY)) {
+    this.storageManager.clearGameState();
+    previousState = null;
+  }
+
   // Reload the game from a previous game if present
   if (previousState) {
-    this.grid        = new Grid(previousState.grid.size,
+    this.grid        = new Grid(previousState.grid.sizeX,
+                                previousState.grid.sizeY,
                                 previousState.grid.cells); // Reload grid
     this.score       = previousState.score;
     this.over        = previousState.over;
     this.won         = previousState.won;
     this.keepPlaying = previousState.keepPlaying;
   } else {
-    this.grid        = new Grid(this.size);
+    this.grid        = new Grid(this.sizeX, this.sizeY);
     this.score       = 0;
     this.over        = false;
     this.won         = false;
@@ -53,6 +62,9 @@ GameManager.prototype.setup = function () {
     // Add the initial tiles
     this.addStartTiles();
   }
+
+  // Build the game grid
+  this.actuator.buildHTMLGrid(this.grid.sizeX, this.grid.sizeY);
 
   // Update the actuator
   this.actuate();
@@ -121,8 +133,8 @@ GameManager.prototype.prepareTiles = function () {
 
 // Move a tile and its representation
 GameManager.prototype.moveTile = function (tile, cell) {
-  this.grid.cells[tile.x][tile.y] = null;
-  this.grid.cells[cell.x][cell.y] = tile;
+  this.grid.cells[tile.y][tile.x] = null;
+  this.grid.cells[cell.y][cell.x] = tile;
   tile.updatePosition(cell);
 };
 
@@ -143,8 +155,8 @@ GameManager.prototype.move = function (direction) {
   this.prepareTiles();
 
   // Traverse the grid in the right direction and move tiles
-  traversals.x.forEach(function (x) {
-    traversals.y.forEach(function (y) {
+  traversals.y.forEach(function (y) {
+    traversals.x.forEach(function (x) {
       cell = { x: x, y: y };
       tile = self.grid.cellContent(cell);
 
@@ -207,8 +219,10 @@ GameManager.prototype.getVector = function (direction) {
 GameManager.prototype.buildTraversals = function (vector) {
   var traversals = { x: [], y: [] };
 
-  for (var pos = 0; pos < this.size; pos++) {
+  for (var pos = 0; pos < this.sizeX; pos++) {
     traversals.x.push(pos);
+  }
+  for (var pos = 0; pos < this.sizeY; pos++) {
     traversals.y.push(pos);
   }
 
@@ -245,8 +259,8 @@ GameManager.prototype.tileMatchesAvailable = function () {
 
   var tile;
 
-  for (var x = 0; x < this.size; x++) {
-    for (var y = 0; y < this.size; y++) {
+  for (var y = 0; y < this.sizeY; y++) {
+    for (var x = 0; x < this.sizeX; x++) {
       tile = this.grid.cellContent({ x: x, y: y });
 
       if (tile) {
